@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block content %}
+<h3>Request a venue for private hire</h3>
+<form method="post" action="/hire" class="row g-2">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+  <div class="col-12"><label class="form-label">Venue</label>
+    <select name="venue_id" class="form-select">
+      {% for v in venues %}<option value="{{ v.id }}" {{ 'selected' if v.id == f.venue_id }}>
+        {{ v.name }} (capacity {{ v.capacity }}, LKR {{ '%.0f'|format(v.hourly_rate) }}/hour)</option>{% endfor %}
+    </select></div>
+  <div class="col-12 col-md-4"><label class="form-label">Date</label><input type="date" name="date" class="form-control" value="{{ f.date }}" required></div>
+  <div class="col-6 col-md-4"><label class="form-label">Start</label><input type="time" name="start" class="form-control" value="{{ f.start }}" required></div>
+  <div class="col-6 col-md-4"><label class="form-label">End</label><input type="time" name="end" class="form-control" value="{{ f.end }}" required></div>
+  <div class="col-12 col-md-4"><label class="form-label">Guests</label><input type="number" min="1" name="guests" class="form-control" value="{{ f.guests }}" required></div>
+  <div class="col-12 col-md-8"><label class="form-label">Purpose</label><input name="purpose" class="form-control" value="{{ f.purpose }}" placeholder="Farewell, reception, club meeting..."></div>
+  <div class="col-12"><button class="btn btn-primary">Request venue</button></div>
+</form>
+
+{% if proposal %}
+<div class="card mt-4 border-warning"><div class="card-body">
+  <h5>Suggested alternatives</h5>
+  <p class="small text-muted">Click one to fill the form, then submit again.</p>
+  <ul class="list-group">
+    {% for p in proposal %}<a class="list-group-item list-group-item-action" href="{{ p.url }}">{{ p.label }}</a>{% endfor %}
+  </ul>
+</div></div>
+{% endif %}
+<p class="small text-muted mt-3">Rules: up to 4 hours and under 80% of capacity is confirmed instantly. Longer or bigger requests go to an admin. Weekend rate is ×1.25.</p>
+{% endblock %}

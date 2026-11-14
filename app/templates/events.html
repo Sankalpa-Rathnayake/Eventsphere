@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block content %}
+<form class="row g-2 mb-3" method="get" action="/events">
+  <div class="col-12 col-md-6"><input class="form-control" name="q" value="{{ q }}" placeholder="Search events"></div>
+  <div class="col-8 col-md-4">
+    <select class="form-select" name="category"><option value="">All categories</option>
+      {% for c in categories %}<option {{ 'selected' if c == category }}>{{ c }}</option>{% endfor %}
+    </select></div>
+  <div class="col-4 col-md-2"><button class="btn btn-primary w-100">Search</button></div>
+</form>
+<div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3">
+{% for x in cards %}
+  <div class="col"><div class="card h-100 shadow-sm"><div class="card-body">
+    <span class="badge bg-secondary">{{ x.event.category }}</span>
+    <h5 class="card-title mt-2">{{ x.event.title }}</h5>
+    <p class="small text-muted mb-2">{{ x.venue.name if x.venue }}<br>{{ x.event.start.strftime('%a %d %b %Y, %H:%M') }}</p>
+    <p class="mb-1">From LKR {{ '%.2f'|format(x.from_price) }}</p>
+    <p>{% if x.left > 0 %}<span class="badge bg-success">{{ x.left }} tickets left</span>
+       {% else %}<span class="badge bg-danger">Sold out</span>{% endif %}</p>
+    <a href="/events/{{ x.event.id }}" class="btn btn-outline-primary btn-sm">View event</a>
+  </div></div></div>
+{% else %}<p>No events found.</p>{% endfor %}
+</div>
+{% endblock %}

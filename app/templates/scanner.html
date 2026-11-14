@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block content %}
+<h3>Gate scanner</h3>
+<select id="event" class="form-select mb-2">
+  <option value="">Choose the event you are scanning for</option>
+  {% for e in events %}<option value="{{ e.id }}">{{ e.title }} ({{ e.start.strftime('%d %b %H:%M') }})</option>{% endfor %}
+</select>
+<div id="reader" style="max-width:400px;width:100%"></div>
+<button id="startBtn" class="btn btn-primary my-2">Start camera</button>
+<div class="input-group mb-3">
+  <input id="manual" class="form-control" placeholder="Or type the ticket code">
+  <button id="manualBtn" class="btn btn-secondary">Check</button>
+</div>
+<div id="result" class="alert alert-secondary">Waiting for a scan...</div>
+<input type="hidden" id="csrf" value="{{ csrf_token }}">
+{% endblock %}
+
+{% block scripts %}
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<script>
+const result = document.getElementById('result');
+let locked = false;
+
+async function check(code) {
+  const eventId = document.getElementById('event').value;
+  if (!eventId) { result.className = 'alert alert-warning'; result.textContent = 'Choose an event first'; return; }
+  const fd = new FormData();
+  fd.append('code', code);
+  fd.append('event_id', eventId);
+  fd.append('csrf_token', document.getElementById('csrf').value);
+  try {
+    const res = await fetch('/staff/scan', { method: 'POST', body: fd });
+    const data = await res.json();
+    result.className = 'alert ' + (data.ok ? 'alert-success' : 'alert-danger');
+    result.textContent = (data.ok ? 'ADMIT: ' : 'REJECT: ') + data.reason;
+  } catch (e) {
+    result.className = 'alert alert-warning';
+    result.textContent = 'Network or login problem. Log in again.';
+  }
+}
+
+document.getElementById('manualBtn').onclick = () => check(document.getElementById('manual').value.trim());
+
+document.getElementById('startBtn').onclick = () => {
+  const scanner = new Html5Qrcode('reader');
+  scanner.start({ facingMode: 'environment' }, { fps: 10, qrbox: 220 }, (text) => {
+    if (locked) return;           // ignore the same QR for 3 seconds
+    locked = true;
+    check(text).finally(() => setTimeout(() => locked = false, 3000));
+  }).catch(err => {
+    result.className = 'alert alert-warning';
+    result.textContent = 'Camera error: ' + err + ' (use manual entry)';
+  });
+};
+</script>
+{% endblock %}
