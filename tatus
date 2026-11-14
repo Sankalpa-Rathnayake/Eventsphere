@@ -1,0 +1,5 @@
+[33mca6964c[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m)[m Deployment requirements
+[33m42b1ef4[m Web pages, routes, templates, web tests
+[33m45c02fe[m Five agents, timer, and tests
+[33mfea1b0e[m Database, models, message bus, security
+[33mace6495[m Project setup
