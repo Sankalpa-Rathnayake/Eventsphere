@@ -61,3 +61,9 @@ def set_state(db, agent, key, value):
     else:
         db.add(AgentState(agent=agent, key=key, value=json.dumps(value, default=str)))
     db.flush()
+
+
+
+def reply(performative, **content):
+    """Helper so agents can build replies: reply("AGREE", booking_id=3)"""
+    return {"performative": performative, "content": content}
