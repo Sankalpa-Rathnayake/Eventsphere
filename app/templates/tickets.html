@@ -1,15 +1,17 @@
 {% extends "base.html" %}
 {% block content %}
-<h3>Tickets: {{ ev.title }}</h3>
-<p class="text-muted">{{ ev.start.strftime('%a %d %b %Y, %H:%M') }} · Payment ref {{ b.payment_ref }} · Booking {{ b.status }}</p>
+<h4>{{ ev.title }}</h4>
+<p class="text-muted small">{{ ev.start.strftime('%a %d %b %Y, %H:%M') }}<br>
+  Payment ref {{ b.payment_ref }} · Booking {{ b.status }}</p>
+<p class="small text-muted">Turn your screen brightness up and show the QR code at the gate.</p>
 <div class="row row-cols-1 row-cols-md-3 g-3">
 {% for x in items %}
-  <div class="col"><div class="card text-center"><div class="card-body">
-    <img src="{{ x.qr }}" class="img-fluid" style="max-width:240px" alt="QR code">
+  <div class="col"><div class="card text-center shadow-sm"><div class="card-body">
+    <img src="{{ x.qr }}" class="qr-img" alt="QR code">
     <p class="small text-muted mt-2 mb-1" style="word-break:break-all">{{ x.t.code }}</p>
     <span class="badge bg-{{ 'success' if x.t.status == 'valid' else 'secondary' if x.t.status == 'used' else 'danger' }}">{{ x.t.status }}</span>
   </div></div></div>
 {% endfor %}
 </div>
-<a href="/my" class="btn btn-link mt-3">Back to my account</a>
+<a href="/my" class="btn btn-outline-primary w-100 mt-3">Back to my account</a>
 {% endblock %}

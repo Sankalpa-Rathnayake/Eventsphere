@@ -10,8 +10,7 @@ from .security import get_csrf_token
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 templates = Jinja2Templates(directory=os.path.join(BASE_DIR, "templates"))
-CATEGORIES = ["Concert", "Workshop", "Seminar", "Conference"]
-
+CATEGORIES = ["Concert", "Workshop", "Seminar", "Conference", "Sports Event"]
 
 def go(url):
     return RedirectResponse(url, status_code=303)

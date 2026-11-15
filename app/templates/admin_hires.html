@@ -1,18 +1,33 @@
 {% extends "base.html" %}
 {% block content %}
-<h3>Venue hire requests</h3>
-<div class="table-responsive"><table class="table table-sm bg-white align-middle">
-  <tr><th>Venue</th><th>When</th><th>Guests</th><th>Purpose</th><th>Price</th><th>Status</th><th></th></tr>
+<h4 class="mb-3">Venue hire requests</h4>
+<table class="table table-sm bg-white table-stack align-middle">
+  <thead><tr><th>Venue</th><th>When</th><th>Guests</th><th>Purpose</th><th>Price</th><th>Status</th><th></th></tr></thead>
+  <tbody>
   {% for x in rows %}
-  <tr><td>{{ x.venue.name }}</td>
-    <td>{{ x.h.start.strftime('%d %b %H:%M') }} to {{ x.h.end.strftime('%H:%M') }}</td>
-    <td>{{ x.h.guests }}</td><td>{{ x.h.purpose }}</td><td>{{ '%.2f'|format(x.h.price) }}</td>
-    <td>{{ x.h.status }}<br><small class="text-muted">{{ x.h.note }}</small></td>
-    <td>{% if x.h.status == 'pending' %}
-      <form method="post" action="/admin/hires/{{ x.h.id }}/approve" class="d-inline"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button class="btn btn-sm btn-success">Approve</button></form>
-      <form method="post" action="/admin/hires/{{ x.h.id }}/reject" class="d-inline"><input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-        <input name="note" placeholder="Reason" class="form-control form-control-sm d-inline w-auto">
-        <button class="btn btn-sm btn-danger">Reject</button></form>{% endif %}</td></tr>
-  {% else %}<tr><td colspan="7" class="text-muted">No requests</td></tr>{% endfor %}
-</table></div>
+  <tr>
+    <td data-label="Venue"><strong>{{ x.venue.name }}</strong></td>
+    <td data-label="When">{{ x.h.start.strftime('%d %b %H:%M') }} to {{ x.h.end.strftime('%H:%M') }}</td>
+    <td data-label="Guests">{{ x.h.guests }}</td>
+    <td data-label="Purpose">{{ x.h.purpose }}</td>
+    <td data-label="Price">LKR {{ '%.2f'|format(x.h.price) }}</td>
+    <td data-label="Status">{{ x.h.status }}{% if x.h.note %}<br><small class="text-muted">{{ x.h.note }}</small>{% endif %}</td>
+    <td class="actions">
+      {% if x.h.status == 'pending' %}
+      <form method="post" action="/admin/hires/{{ x.h.id }}/approve">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <button class="btn btn-sm btn-success">Approve</button>
+      </form>
+      <form method="post" action="/admin/hires/{{ x.h.id }}/reject">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <input name="note" placeholder="Reason for rejecting" class="form-control form-control-sm mb-2">
+        <button class="btn btn-sm btn-danger">Reject</button>
+      </form>
+      {% endif %}
+    </td>
+  </tr>
+  {% else %}<tr><td class="full text-muted">No requests</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
 {% endblock %}

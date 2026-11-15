@@ -1,35 +1,66 @@
 {% extends "base.html" %}
 {% block content %}
-<h3>Organiser dashboard</h3>
-<div class="table-responsive"><table class="table table-sm bg-white">
-  <tr><th>Event</th><th>Status</th><th>Tickets sold</th><th>Revenue (simulated, LKR)</th><th>Checked in</th><th>Venue capacity</th></tr>
+<h4 class="mb-3">Organiser dashboard</h4>
+
+<div class="row g-2 mb-3">
+  <div class="col-6 col-md-3"><div class="kpi"><div class="num">{{ rows|length }}</div><div class="lbl">Events</div></div></div>
+  <div class="col-6 col-md-3"><div class="kpi"><div class="num">{{ rows|sum(attribute='sold') }}</div><div class="lbl">Tickets sold</div></div></div>
+  <div class="col-6 col-md-3"><div class="kpi"><div class="num">{{ '%.0f'|format(rows|sum(attribute='revenue')) }}</div><div class="lbl">Revenue (LKR, simulated)</div></div></div>
+  <div class="col-6 col-md-3"><div class="kpi"><div class="num">{{ rows|sum(attribute='checked') }}</div><div class="lbl">Checked in</div></div></div>
+</div>
+
+<h6>Events</h6>
+<table class="table table-sm bg-white table-stack align-middle">
+  <thead><tr><th>Event</th><th>Status</th><th>Tickets sold</th><th>Revenue (LKR)</th><th>Checked in</th><th>Venue capacity</th></tr></thead>
+  <tbody>
   {% for x in rows %}
-  <tr><td>{{ x.e.title }}</td><td>{{ x.e.status }}</td><td>{{ x.sold }} / {{ x.total }}</td>
-    <td>{{ '%.2f'|format(x.revenue) }}</td><td>{{ x.checked }}</td><td>{{ x.capacity }}</td></tr>
+  <tr>
+    <td data-label="Event"><strong>{{ x.e.title }}</strong></td>
+    <td data-label="Status">{{ x.e.status }}</td>
+    <td data-label="Tickets sold">{{ x.sold }} / {{ x.total }}</td>
+    <td data-label="Revenue (LKR)">{{ '%.2f'|format(x.revenue) }}</td>
+    <td data-label="Checked in">{{ x.checked }}</td>
+    <td data-label="Venue capacity">{{ x.capacity }}</td>
+  </tr>
+  {% else %}<tr><td class="full text-muted">No events yet</td></tr>
   {% endfor %}
-</table></div>
+  </tbody>
+</table>
 
-<canvas id="salesChart" height="110" class="bg-white mb-4"></canvas>
+<div class="chart-box mb-4"><canvas id="salesChart"></canvas></div>
 
-<h5>Agent state (persistent beliefs)</h5>
-<div class="table-responsive" style="max-height:220px;overflow:auto"><table class="table table-sm bg-white">
-  <tr><th>Agent</th><th>Key</th><th>Value</th></tr>
-  {% for s in states %}<tr><td>{{ s.agent }}</td><td>{{ s.key }}</td><td>{{ s.value }}</td></tr>{% endfor %}
-</table></div>
+<details class="mb-4">
+  <summary class="fw-bold mb-2">Agent state (persistent beliefs)</summary>
+  <table class="table table-sm bg-white table-stack small">
+    <thead><tr><th>Agent</th><th>Key</th><th>Value</th></tr></thead>
+    <tbody>
+    {% for s in states %}
+    <tr><td data-label="Agent">{{ s.agent }}</td><td data-label="Key">{{ s.key }}</td><td data-label="Value">{{ s.value }}</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</details>
 
-<h5 class="mt-4">Agent message log <small class="text-muted">(times in UTC)</small>
-  {% if conv %}<a class="btn btn-sm btn-outline-secondary" href="/admin/dashboard">Show all</a>{% endif %}</h5>
-{% if conv %}<p class="small">Showing one conversation: <code>{{ conv }}</code></p>{% else %}<p class="small text-muted">Click a conversation id to follow one user action across agents.</p>{% endif %}
-<div class="table-responsive"><table class="table table-sm bg-white small">
-  <tr><th>Time</th><th>Conversation</th><th>From → To</th><th>Performative</th><th>Content</th></tr>
+<h6>Agent message log <small class="text-muted">(times in UTC)</small>
+  {% if conv %}<a class="btn btn-sm btn-outline-primary ms-2" href="/admin/dashboard">Show all</a>{% endif %}</h6>
+{% if conv %}<p class="small">Showing one conversation: <code>{{ conv }}</code></p>
+{% else %}<p class="small text-muted">Tap a conversation id to follow one user action across agents.</p>{% endif %}
+
+<table class="table table-sm bg-white table-stack small">
+  <thead><tr><th>Time</th><th>Conversation</th><th>From → To</th><th>Performative</th><th>Content</th></tr></thead>
+  <tbody>
   {% for m in msgs %}
-  <tr><td class="text-nowrap">{{ m.created.strftime('%d %b %H:%M:%S') }}</td>
-    <td><a href="/admin/dashboard?conv={{ m.conversation_id }}">{{ m.conversation_id[:8] }}</a></td>
-    <td class="text-nowrap">{{ m.sender }} → {{ m.receiver }}</td>
-    <td><span class="badge bg-{{ 'danger' if m.performative in ['REFUSE', 'FAILURE'] else 'success' if m.performative == 'AGREE' else 'warning' if m.performative == 'PROPOSE' else 'secondary' if m.performative == 'INFORM' else 'primary' }}">{{ m.performative }}</span></td>
-    <td style="word-break:break-all">{{ m.content[:160] }}</td></tr>
+  <tr>
+    <td data-label="Time" class="text-nowrap">{{ m.created.strftime('%d %b %H:%M:%S') }}</td>
+    <td data-label="Conversation"><a href="/admin/dashboard?conv={{ m.conversation_id }}">{{ m.conversation_id[:8] }}</a></td>
+    <td data-label="From → To">{{ m.sender }} → {{ m.receiver }}</td>
+    <td data-label="Type"><span class="badge bg-{{ 'danger' if m.performative in ['REFUSE', 'FAILURE'] else 'success' if m.performative == 'AGREE' else 'warning text-dark' if m.performative == 'PROPOSE' else 'secondary' if m.performative == 'INFORM' else 'primary' }}">{{ m.performative }}</span></td>
+    <td data-label="Content" class="full" style="word-break:break-all">{{ m.content[:160] }}</td>
+  </tr>
+  {% else %}<tr><td class="full text-muted">No messages yet</td></tr>
   {% endfor %}
-</table></div>
+  </tbody>
+</table>
 {% endblock %}
 
 {% block scripts %}
@@ -38,8 +69,11 @@
 new Chart(document.getElementById('salesChart'), {
   type: 'bar',
   data: { labels: {{ labels|tojson }},
-          datasets: [{ label: 'Tickets sold', data: {{ sold_data|tojson }} },
-                     { label: 'Checked in', data: {{ checked_data|tojson }} }] }
+          datasets: [
+            { label: 'Tickets sold', data: {{ sold_data|tojson }}, backgroundColor: '#391032' },
+            { label: 'Checked in', data: {{ checked_data|tojson }}, backgroundColor: '#c98bbb' }
+          ] },
+  options: { responsive: true, maintainAspectRatio: false }
 });
 </script>
 {% endblock %}

@@ -11,6 +11,7 @@ from . import agents  # noqa: F401  (registers the five agents on the bus)
 from .agents import waitlist_agent
 from .seed_data import seed
 from . import routes_public, routes_admin
+from fastapi.staticfiles import StaticFiles
 
 Base.metadata.create_all(bind=engine)
 
@@ -27,6 +28,7 @@ app = FastAPI(title="EventSphere", lifespan=lifespan)
 app.add_middleware(SessionMiddleware, secret_key=os.getenv("SECRET_KEY", "dev-secret-change-me"))
 app.include_router(routes_public.router)
 app.include_router(routes_admin.router)
+app.mount("/static", StaticFiles(directory=os.path.join(os.path.dirname(os.path.abspath(__file__)), "static")), name="static")
 
 
 @app.exception_handler(StarletteHTTPException)

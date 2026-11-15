@@ -1,57 +1,67 @@
 {% extends "base.html" %}
 {% block content %}
-<h3>My account</h3>
+<h4 class="mb-3">My account</h4>
 
-<h5 class="mt-3">Notifications</h5>
-<ul class="list-group mb-4">
+<h6>Notifications</h6>
+<ul class="list-group mb-4 shadow-sm rounded-4">
 {% for n in notes %}<li class="list-group-item {{ 'fw-bold' if n.id in fresh }}">{{ n.text }}</li>
 {% else %}<li class="list-group-item text-muted">No notifications</li>{% endfor %}
 </ul>
 
-<h5>Waitlist</h5>
+<h6>Waitlist</h6>
 {% for x in waits %}
-<div class="card mb-2"><div class="card-body">
-  <strong>{{ x.ev.title }}</strong>: {{ x.cat.name }} × {{ x.w.quantity }}
+<div class="card shadow-sm mb-2"><div class="card-body">
+  <strong>{{ x.ev.title }}</strong>
+  <div class="small text-muted">{{ x.cat.name }} × {{ x.w.quantity }}</div>
   {% if x.w.status == 'offered' %}
   <div class="alert alert-success mt-2 mb-0">Seats are held for you. Time left:
     <strong data-secs="{{ x.secs }}">{{ x.secs }}</strong>
     <form method="post" action="/waitlist/{{ x.w.id }}/claim" class="mt-2">
       <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-      <button class="btn btn-success btn-sm">Claim &amp; pay (simulated)</button></form></div>
-  {% else %}<span class="badge bg-info">Waiting</span>{% endif %}
+      <button class="btn btn-success w-100">Claim &amp; pay (simulated)</button>
+    </form>
+  </div>
+  {% else %}<span class="badge bg-info mt-2">Waiting</span>{% endif %}
 </div></div>
 {% else %}<p class="text-muted">You are not on any waitlist.</p>{% endfor %}
 
-<h5 class="mt-4">Bookings</h5>
-<div class="table-responsive"><table class="table table-sm bg-white align-middle">
-  <tr><th>Event</th><th>Date</th><th>Total</th><th>Status</th><th></th></tr>
-  {% for x in bookings %}
-  <tr>
-    <td>{{ x.ev.title }}</td>
-    <td>{{ x.ev.start.strftime('%d %b %H:%M') }}</td>
-    <td>{{ '%.2f'|format(x.b.total) }}<br><small class="text-muted">{{ x.b.payment_ref }}</small></td>
-    <td>{{ x.b.status }}{% if x.b.status == 'cancelled' %}<br><small>refund {{ '%.2f'|format(x.b.refund) }}</small>{% endif %}</td>
-    <td><a class="btn btn-sm btn-outline-primary" href="/bookings/{{ x.b.id }}/tickets">Tickets</a>
-      {% if x.can_cancel %}
-      <form method="post" action="/bookings/{{ x.b.id }}/cancel" class="d-inline"
-            onsubmit="return confirm('Cancel this booking? Refund: LKR {{ '%.2f'|format(x.refund) }}')">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-        <button class="btn btn-sm btn-outline-danger">Cancel</button></form>{% endif %}
-    </td>
-  </tr>
-  {% else %}<tr><td colspan="5" class="text-muted">No bookings yet</td></tr>{% endfor %}
-</table></div>
+<h6 class="mt-4">Bookings</h6>
+{% for x in bookings %}
+<div class="card shadow-sm mb-2"><div class="card-body">
+  <div class="d-flex justify-content-between align-items-start">
+    <div>
+      <strong>{{ x.ev.title }}</strong>
+      <div class="small text-muted">{{ x.ev.start.strftime('%a %d %b, %H:%M') }}</div>
+    </div>
+    <span class="badge bg-{{ 'success' if x.b.status == 'confirmed' else 'secondary' }}">{{ x.b.status }}</span>
+  </div>
+  <div class="small mt-2">Total LKR {{ '%.2f'|format(x.b.total) }} · <span class="text-muted">{{ x.b.payment_ref }}</span></div>
+  {% if x.b.status == 'cancelled' %}<div class="small">Refund LKR {{ '%.2f'|format(x.b.refund) }}</div>{% endif %}
+  <div class="d-grid gap-2 mt-3">
+    <a class="btn btn-primary" href="/bookings/{{ x.b.id }}/tickets">Show tickets</a>
+    {% if x.can_cancel %}
+    <form method="post" action="/bookings/{{ x.b.id }}/cancel"
+          onsubmit="return confirm('Cancel this booking? Refund: LKR {{ '%.2f'|format(x.refund) }}')">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <button class="btn btn-outline-danger w-100">Cancel booking</button>
+    </form>
+    {% endif %}
+  </div>
+</div></div>
+{% else %}<p class="text-muted">No bookings yet.</p>{% endfor %}
 
-<h5 class="mt-4">Venue hire requests</h5>
-<div class="table-responsive"><table class="table table-sm bg-white">
-  <tr><th>Venue</th><th>When</th><th>Price</th><th>Status</th></tr>
-  {% for x in hires %}
-  <tr><td>{{ x.venue.name }}</td>
-    <td>{{ x.h.start.strftime('%d %b %H:%M') }} to {{ x.h.end.strftime('%H:%M') }}</td>
-    <td>{{ '%.2f'|format(x.h.price) }}</td>
-    <td>{{ x.h.status }}<br><small class="text-muted">{{ x.h.note }}</small></td></tr>
-  {% else %}<tr><td colspan="4" class="text-muted">No hire requests</td></tr>{% endfor %}
-</table></div>
+<h6 class="mt-4">Venue hire requests</h6>
+{% for x in hires %}
+<div class="card shadow-sm mb-2"><div class="card-body">
+  <div class="d-flex justify-content-between">
+    <strong>{{ x.venue.name }}</strong>
+    <span class="badge bg-{{ 'success' if x.h.status == 'confirmed' else 'danger' if x.h.status == 'rejected' else 'warning text-dark' }}">{{ x.h.status }}</span>
+  </div>
+  <div class="small text-muted">{{ x.h.start.strftime('%a %d %b, %H:%M') }} to {{ x.h.end.strftime('%H:%M') }}</div>
+  <div class="small mt-1">LKR {{ '%.2f'|format(x.h.price) }}</div>
+  {% if x.h.note %}<div class="small text-muted">{{ x.h.note }}</div>{% endif %}
+</div></div>
+{% else %}<p class="text-muted">No hire requests.</p>{% endfor %}
 {% endblock %}
 
 {% block scripts %}

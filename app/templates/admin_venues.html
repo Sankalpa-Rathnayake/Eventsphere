@@ -1,14 +1,21 @@
 {% extends "base.html" %}
 {% block content %}
-<h3>Venues</h3>
-<div class="table-responsive"><table class="table table-sm bg-white">
-  <tr><th>Name</th><th>Location</th><th>Capacity</th><th>Rate/hr</th><th>Hire?</th><th></th></tr>
+<h4 class="mb-3">Venues</h4>
+<table class="table table-sm bg-white table-stack align-middle">
+  <thead><tr><th>Name</th><th>Location</th><th>Capacity</th><th>Rate/hr</th><th>Hire?</th><th></th></tr></thead>
+  <tbody>
   {% for x in venues %}
-  <tr><td>{{ x.name }}</td><td>{{ x.location }}</td><td>{{ x.capacity }}</td><td>{{ '%.0f'|format(x.hourly_rate) }}</td>
-    <td>{{ 'Yes' if x.open_for_hire else 'No' }}</td>
-    <td><a class="btn btn-sm btn-outline-primary" href="/admin/venues/{{ x.id }}/edit">Edit</a></td></tr>
+  <tr>
+    <td data-label="Name"><strong>{{ x.name }}</strong></td>
+    <td data-label="Location">{{ x.location }}</td>
+    <td data-label="Capacity">{{ x.capacity }}</td>
+    <td data-label="Rate/hr">LKR {{ '%.0f'|format(x.hourly_rate) }}</td>
+    <td data-label="Open for hire">{{ 'Yes' if x.open_for_hire else 'No' }}</td>
+    <td class="actions"><a class="btn btn-sm btn-outline-primary" href="/admin/venues/{{ x.id }}/edit">Edit</a></td>
+  </tr>
   {% endfor %}
-</table></div>
+  </tbody>
+</table>
 
 <h5 class="mt-4">{{ 'Edit venue' if v else 'Add a venue' }}</h5>
 <form method="post" action="{{ '/admin/venues/' ~ v.id if v else '/admin/venues' }}" class="row g-2">
@@ -16,12 +23,14 @@
   <div class="col-md-6"><label class="form-label">Name</label><input name="name" class="form-control" value="{{ v.name if v }}" required></div>
   <div class="col-md-6"><label class="form-label">Location</label><input name="location" class="form-control" value="{{ v.location if v }}"></div>
   <div class="col-6 col-md-3"><label class="form-label">Capacity</label><input type="number" min="1" name="capacity" class="form-control" value="{{ v.capacity if v }}" required></div>
-  <div class="col-6 col-md-3"><label class="form-label">Hourly hire rate (LKR)</label><input type="number" step="0.01" min="0" name="hourly_rate" class="form-control" value="{{ v.hourly_rate if v else 0 }}"></div>
+  <div class="col-6 col-md-3"><label class="form-label">Hire rate (LKR/hour)</label><input type="number" step="0.01" min="0" name="hourly_rate" class="form-control" value="{{ v.hourly_rate if v else 0 }}"></div>
   <div class="col-md-6"><label class="form-label">Image URL</label><input name="image" class="form-control" value="{{ v.image if v }}"></div>
   <div class="col-12"><label class="form-label">Description</label><textarea name="description" class="form-control" rows="2">{{ v.description if v }}</textarea></div>
   <div class="col-12"><div class="form-check"><input class="form-check-input" type="checkbox" name="open_for_hire" id="hire" {{ 'checked' if v and v.open_for_hire }}>
     <label class="form-check-label" for="hire">Open for private hire</label></div></div>
-  <div class="col-12"><button class="btn btn-primary">Save venue</button>
-    {% if v %}<a href="/admin/venues" class="btn btn-link">New venue</a>{% endif %}</div>
+  <div class="col-12 d-grid d-md-block gap-2">
+    <button class="btn btn-primary">Save venue</button>
+    {% if v %}<a href="/admin/venues" class="btn btn-link">New venue</a>{% endif %}
+  </div>
 </form>
 {% endblock %}

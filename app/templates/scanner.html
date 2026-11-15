@@ -1,17 +1,23 @@
 {% extends "base.html" %}
 {% block content %}
-<h3>Gate scanner</h3>
-<select id="event" class="form-select mb-2">
+<h4>Gate scanner</h4>
+<select id="event" class="form-select mb-3">
   <option value="">Choose the event you are scanning for</option>
   {% for e in events %}<option value="{{ e.id }}">{{ e.title }} ({{ e.start.strftime('%d %b %H:%M') }})</option>{% endfor %}
 </select>
-<div id="reader" style="max-width:400px;width:100%"></div>
-<button id="startBtn" class="btn btn-primary my-2">Start camera</button>
+
+<div id="reader" class="mb-2"></div>
+<div class="d-grid gap-2 mb-3">
+  <button id="startBtn" class="btn btn-primary btn-lg">Start camera</button>
+  <button id="stopBtn" class="btn btn-outline-secondary d-none">Stop camera</button>
+</div>
+
+<div id="result" class="scan-result alert alert-secondary mb-3">Waiting for a scan...</div>
+
 <div class="input-group mb-3">
   <input id="manual" class="form-control" placeholder="Or type the ticket code">
   <button id="manualBtn" class="btn btn-secondary">Check</button>
 </div>
-<div id="result" class="alert alert-secondary">Waiting for a scan...</div>
 <input type="hidden" id="csrf" value="{{ csrf_token }}">
 {% endblock %}
 
@@ -19,11 +25,11 @@
 <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 <script>
 const result = document.getElementById('result');
-let locked = false;
+let locked = false, scanner = null;
 
 async function check(code) {
   const eventId = document.getElementById('event').value;
-  if (!eventId) { result.className = 'alert alert-warning'; result.textContent = 'Choose an event first'; return; }
+  if (!eventId) { result.className = 'scan-result alert alert-warning'; result.textContent = 'Choose an event first'; return; }
   const fd = new FormData();
   fd.append('code', code);
   fd.append('event_id', eventId);
@@ -31,10 +37,11 @@ async function check(code) {
   try {
     const res = await fetch('/staff/scan', { method: 'POST', body: fd });
     const data = await res.json();
-    result.className = 'alert ' + (data.ok ? 'alert-success' : 'alert-danger');
-    result.textContent = (data.ok ? 'ADMIT: ' : 'REJECT: ') + data.reason;
+    result.className = 'scan-result alert ' + (data.ok ? 'alert-success' : 'alert-danger');
+    result.textContent = (data.ok ? '✅ ADMIT: ' : '⛔ REJECT: ') + data.reason;
+    if (navigator.vibrate) navigator.vibrate(data.ok ? 150 : [200, 100, 200]);
   } catch (e) {
-    result.className = 'alert alert-warning';
+    result.className = 'scan-result alert alert-warning';
     result.textContent = 'Network or login problem. Log in again.';
   }
 }
@@ -42,14 +49,25 @@ async function check(code) {
 document.getElementById('manualBtn').onclick = () => check(document.getElementById('manual').value.trim());
 
 document.getElementById('startBtn').onclick = () => {
-  const scanner = new Html5Qrcode('reader');
-  scanner.start({ facingMode: 'environment' }, { fps: 10, qrbox: 220 }, (text) => {
-    if (locked) return;           // ignore the same QR for 3 seconds
+  scanner = new Html5Qrcode('reader');
+  const box = (w, h) => { const s = Math.floor(Math.min(w, h) * 0.7); return { width: s, height: s }; };
+  scanner.start({ facingMode: 'environment' }, { fps: 10, qrbox: box }, (text) => {
+    if (locked) return;
     locked = true;
     check(text).finally(() => setTimeout(() => locked = false, 3000));
+  }).then(() => {
+    document.getElementById('startBtn').classList.add('d-none');
+    document.getElementById('stopBtn').classList.remove('d-none');
   }).catch(err => {
-    result.className = 'alert alert-warning';
+    result.className = 'scan-result alert alert-warning';
     result.textContent = 'Camera error: ' + err + ' (use manual entry)';
+  });
+};
+
+document.getElementById('stopBtn').onclick = () => {
+  if (scanner) scanner.stop().then(() => {
+    document.getElementById('startBtn').classList.remove('d-none');
+    document.getElementById('stopBtn').classList.add('d-none');
   });
 };
 </script>
