@@ -2,9 +2,8 @@
 
 A mobile-friendly venue booking and digital ticketing platform where **every booking decision is made by five cooperating software agents** that talk to each other through logged JSON messages.
 
-Built for IT4123 Agent Based Computing Practical, ICA 02.
-
-- **Live site:** https://YOUR-APP.onrender.com
+- **Live site:** https://eventsphere-8kwv.onrender.com
+- **Local address (only while running locally):** http://127.0.0.1:8000
 - **Repository:** https://github.com/Sankalpa-Rathnayake/Eventsphere
 
 > The free hosting tier sleeps when idle. The first page load can take up to a minute.
